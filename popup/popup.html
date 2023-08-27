@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+  <head>
+      <title>Detector Extension</title>
+      <link rel="stylesheet" type="text/css" href="popup.css">
+  </head>
+
+  <body>
+    <div class="logo-title">
+      <img src="../assets/images/logo.png" alt="logo">
+      <h1>RansomMailDefender</h1>
+    </div>
+
+    <!-- Default -->
+    <div id="default-content" class="content">
+      <div class="notice-container">
+        <h3>Your extension is currently inactive!</h3>
+        <p>Please activate the RansomMailDefender to start automatically scan your email activities.</p>
+      </div>
+      
+      <h2 class="content-title">No new activity detected</h2>
+    </div>
+
+    <!-- Progress -->
+    <div id="progress-content" class="prog-content">
+      <div class="prog-pbar-container">
+        <div class="prog-circle">
+          <div class="prog-value">0%</div>
+        </div>
+      </div>
+      <h2 class="prog-content-result">Scanning...</h2>
+      <button class="prog">Stop</button>
+    </div>
+
+    <!-- Complete -->
+    <div id="completed-content" class="comp-content">
+      <img src="../assets/images/completed-progress.png" alt="completed">
+      
+      <h2 class="comp-content-result">Completed</h2>
+    </div>
+
+    <!-- Malicious -->
+    <div id="malicious-content" class="mal-content">
+      <img src="../assets/images/bug.png" alt="mal-logo">
+      
+      <h2 class="mal-content-result"></h2>
+      <!-- <h2 class="mal-content-result">Ransomware</h2> -->
+      <!-- <h2 class="mal-content-result">Malicious</h2> -->
+      <h3 class="mal-content-title"></h3>
+      <!-- <h3 class="mal-content-title">Subject: Join us for team dinner! From: Management Team</h3> -->
+      <!-- <h4>This email contains malicious content.</h4> -->
+      <div class="mal-categories">
+        <div class="mal-btn-category"></div>
+        <!-- <div class="mal-btn-category">Attachment</div>
+        <div class="mal-btn-category">Ransomware</div>
+        <div class="mal-btn-category">WannaCry</div> -->
+      </div>
+      <div class="btn-download">
+        <button id="reportToPdf">Download as PDF</button>
+      </div>
+    </div>
+
+    <!-- Clean -->
+    <div class="clean-content">
+      <img src="../assets/images/checklist.png" alt="clean-logo">
+      
+      <h3 class="clean-content-title"></h3>
+      <h2 class="clean-content-result">Clean</h2>
+      <!-- <h4 class="clean-result-date">29/06/2023</h4> -->
+    </div>
+
+    <div class="toggle">
+      <input type="checkbox" id="active" />
+      <label for="active" class="btn-toggle"></label>
+    </div>
+
+    <script src="popup.js"></script>
+  </body>
+</html>

@@ -1,0 +1,46 @@
+{
+  "manifest_version": 3,
+  "name": "RansomMailDefender",
+  "description": "Email Phishing and Ransomware Detector",
+  "version": "1.0.0",
+  "host_permissions": [
+    "https://mail.google.com/*"
+  ],
+  "oauth2": {
+    "client_id": "YOUR_CLIENT_ID",
+    "scopes": [
+      "https://mail.google.com/",
+      "https://www.googleapis.com/auth/gmail.modify",
+      "https://www.googleapis.com/auth/gmail.addons.current.message.metadata",
+      "https://www.googleapis.com/auth/gmail.metadata",
+      "https://www.googleapis.com/auth/gmail.readonly",
+      "https://www.googleapis.com/auth/cloud-platform"
+    ]
+  },
+  "background": {
+    "service_worker": "js/background.js"
+  },
+  "icons" : {
+    "128": "./assets/images/logo.png"
+  },
+  "action": {
+    "default_popup": "./popup/popup.html",
+    "default_icon": {
+      "128": "./assets/images/logo.png"
+    }
+  },  
+
+  "permissions": [
+    "activeTab",
+    "background",
+    "downloads",
+    "identity",
+    "notifications",
+    "nativeMessaging",
+    "scripting",
+    "storage",
+    "webNavigation",
+    "webRequest",
+    "tabs"
+  ]
+}

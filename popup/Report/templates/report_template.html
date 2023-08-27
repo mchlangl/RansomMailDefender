@@ -1,0 +1,39 @@
+<html>
+  <head>
+    <title>{{titlepage}}</title>
+      <link rel="stylesheet" type="text/css" href="report.css">
+      <!-- <script src="https://raw.githack.com/eKoopmans/html2pdf/master/dist/html2pdf.bundle.js"></script> -->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.3.4/jspdf.min.js"></script>
+      <script src="download_report.js"></script>
+  </head>
+
+  <body>
+    <div class="page-container">
+      <div id="main-content">
+        <div class="logo-title">
+          <img src="../../Assets/images/logo.png" alt="logo">
+          <h1>RansomMailDefender</h1>
+        </div>
+        
+        <div class="report-container">
+          <h1>Report</h1>
+    
+          <h2 class="content-title">Title</h2>
+          <div class="categories">
+              <div class="btn-category">Virus</div>
+              <div class="btn-category">Worm</div>
+              <div class="btn-category">Ransomware</div>
+          </div>
+    
+          <div>
+              <p>Header</p>
+              <p>Email Subject</p>
+              <p>Sender</p>
+              <p>Content</p>
+              <p>Attachment</p>
+          </div>
+      </div>
+      </div>
+    </div>
+  </body>
+</html>
