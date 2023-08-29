@@ -1,4 +1,3 @@
-
 const toggleCheckbox = document.getElementById('active');
 
 if (toggleCheckbox) {
@@ -14,6 +13,11 @@ if (toggleCheckbox) {
             toggleCheckbox.checked = isChecked;
             updateToggle(isChecked);
         });
+
+        const leftSidebar = document.querySelector('.left-side-bar');
+        if (leftSidebar) {
+            leftSidebar.style.display = 'none';
+        } 
     });
 }
 
@@ -25,7 +29,6 @@ function updateToggle(isChecked) {
     }
 }
 
-// Unified function to handle UI update
 function handleUIUpdate(data) {
     hideAllSections();
     let section;
@@ -47,6 +50,9 @@ function handleUIUpdate(data) {
             section = document.getElementById('malicious-content');
             contentResult = section.querySelector('.mal-content-result');
             contentResult.textContent = data.result || "";
+            if (data.result === "ransomware"){
+                const leftSidebar = document.querySelector('.left-side-bar');
+            }
             
             contentTitle = section.querySelector('.mal-content-title');
             contentTitle.textContent = data.title || "";
@@ -64,22 +70,28 @@ function handleUIUpdate(data) {
     if (section) section.style.display = "block";
 }
 
-// to show certain section
+
+function updateUI() {
+    chrome.storage.local.get('extensionState', function(result) {
+        if (result.extensionState) {
+            handleUIUpdate(result.extensionState);
+        }
+    });
+}
+
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-    if (request.action === "updateUI") {
+    if (request.action === "stateChanged") {
+        updateUI();
+    }
+    else if (request.action === "updateUI") {
         handleUIUpdate(request.data);
     }
 });
 
+// .content, .prog-content, .comp-content, .mal-content, .clean-content
 function hideAllSections() {
-    const sections = document.querySelectorAll('.prog-content, .comp-content, .mal-content, .clean-content');
+    const sections = document.getELementsByClass('.content, .comp-content, .mal-content, .clean-content');
     for (const section of sections) {
         section.style.display = "none";
     }
 }
-
-chrome.runtime.sendMessage({ action: "getInitialState" }, function(response) {
-    if (response.action === "updateUI") {
-        handleUIUpdate(response.data);
-    }
-});

@@ -1,6 +1,6 @@
 class Server {
   constructor() {
-    this.vmAddr = "https://34.16.185.58:8765/";
+    this.vmAddr = "34.16.185.58:8766";
     this.socket = null;
   }
 
@@ -10,12 +10,16 @@ class Server {
           console.log("Connected to Server.");
       };
 
-      this.socket.onmessage = (event) => { // Fixed typo here
-        const mssg = event.data;
+      this.socket.onmessage = (event) => {
+        const response = event.data;
+        console.log("Received response: " + response);
+        if (this.callback) {
+            this.callback(response);
+        }
       };
 
       this.socket.onclose = () => {
-        console.log("Server Connection closed.");
+        // console.log("Server Connection closed.");
       };
   }
 
@@ -23,7 +27,7 @@ class Server {
     if (this.socket && this.socket.readyState === WebSocket.OPEN) {
         this.socket.send(data);
     } else {
-        console.error("Socket is not open. Cannot send message.");
+        console.error("Socket not opened");
     }
   }
 }
@@ -37,7 +41,7 @@ class Extension {
       this.isRunning = false;
       this.tabLoadTime = Date.now();
 
-      this.clientId = 'YOUR_CLIENT_ID';
+      this.clientId = 'YOUR_CLIENT_ID'; 
       this.scopes = [
         "https://mail.google.com/",
         "https://www.googleapis.com/auth/gmail.modify",
@@ -58,12 +62,35 @@ class Extension {
         title: null,
         category: null,
       };
+
+      this.server = new Server(this.processMessage.bind(this));
+  
+    }
+
+
+    //SERVER
+    processMessage(response){
+
+        if (response.status === "clean"){
+            this.setState({ currentUI: "clean", title: response.subject });
+            this.updatePopup(this.state);
+        }else if (response.status === "malicious"){
+            this.setState({ currentUI: "malicious", title: response.subject, result: "Unknown" });
+            this.updatePopup(this.state);
+        }else if (response.status === "ransomware"){
+            this.setState({ currentUI: "malicious", title: response.subject, result: "Ransomware", category: response.category});
+            this.updatePopup(this.state);
+        }
     }
 
     initialize() {
+
       console.log(this.state);
+      this.server.openConnection(); // SERVER
+      // this.server.sendMessage("Testing!!!");
+
       chrome.storage.sync.get('toggleState', (data) => {
-        this.toggleState = data.toggleState ? data.toggleState === 'checked' : false; // Default to false if not set
+        this.toggleState = data.toggleState ? data.toggleState === 'checked' : false;
       });
       chrome.runtime.onMessage.addListener((message) => {
           if (message.type === 'toggleStateChange') {
@@ -72,11 +99,11 @@ class Extension {
           }
       });
 
-      this.handleMessage = this.handleMessage.bind(this);
-      this.getInitialState = this.getInitialState.bind(this);
-      // this.updatePopup(this.state);
-
-      chrome.runtime.onMessage.addListener(this.handleMessage);
+      chrome.storage.local.get('extensionState', function(result) {
+        if (result.extensionState) {
+            handleUIUpdate(result.extensionState);
+        }
+      });
   
       if (!this.authorizeState && !this.accessToken) {
           this.authorize(); 
@@ -93,10 +120,11 @@ class Extension {
       setInterval(async () => {
           if (this.toggleState && this.authorizeState) {
             await this.detectActivities();
-            console.log("Activity detected");
+            // console.log("Activity detected");
           }
-      }, 2000);
+      }, 5000);
     }
+
 
     async authorize() {
       const authOptions = {
@@ -104,9 +132,6 @@ class Extension {
           interactive: true,
       };
       console.log(authOptions);
-
-      this.state.currentUI = "completed";
-      this.updatePopup(this.state);
   
       try {
           const responseURL = await chrome.identity.launchWebAuthFlow(authOptions);
@@ -123,45 +148,42 @@ class Extension {
       }
     }
 
-    handleMessage(request, sender, sendResponse) {
-      if (request.action === 'getInitialState') {
-        this.getInitialState(sendResponse);
-      }      
-   
-      return true;
-    }
-
-    getInitialState(sendResponse) {
-        sendResponse({
-            action: "updateUI",
-            data: this.state
-        });
+    handleUIUpdate(extensionState) {
+      this.state = extensionState;
+      this.updatePopup(extensionState); 
     }
 
     updatePopup(data) {
         chrome.runtime.sendMessage({
             action: "updateUI",
             data: data
-        });
+        },
+        () => {
+          if (chrome.runtime.lastError) {
+              console.error(chrome.runtime.lastError.message); // check error
+          }
+        }
+      );
+    }
+
+    setState(newState) {
+      this.state = { ...this.state, ...newState };
+      chrome.storage.local.set({ extensionState: this.state });
     }
   
     async detectActivities() {
       console.log("Detection running status: " + this.isRunning);
-      
       if (this.isRunning === 'true' || this.toggleButton === 'false') return;
   
-      // Ensure the current active tab is mail.google.com
       const activeTab = await this.getActiveTab();
       if (!activeTab.url.includes('mail.google.com')) {
           console.log("Not on mail.google.com. Skipping activity detection.");
           return;
       }
-
-      // Check and print the email ID from Gmail URL
-      const emailIdFromGmailUrl = this.extractEmailId(activeTab.url);
-      if(emailIdFromGmailUrl) {
-          console.log("Active Email ID:", emailIdFromGmailUrl);
-      }
+    //   const emailIdFromGmailUrl = this.extractEmailId(activeTab.url);
+    //   if(emailIdFromGmailUrl) {
+    //       console.log("Active ID:", emailIdFromGmailUrl);
+    //   }
       
       this.isRunning = true;
       
@@ -175,16 +197,19 @@ class Extension {
             this.getIncomingMail().then(val => { console.log("getIncomingMail resolved with:", val); return val; }),
             this.getRedirectLink().then(val => { console.log("getRedirectLink resolved with:", val); return val; }),
           ]);
+          const emailId = await this.getEmailId();
+          console.log(emailId + " iniii");
   
           if (activity) {
               const emailId = await this.getEmailId();
-              
+              this.setState({ currentUI: "completed" });
+              this.updatePopup(this.state);
               if (emailId) {  
-                  await this.parseMail(emailId);
-                  this.state.currentUI = "completed";
-                  this.updatePopup(this.state);
+                await this.parseMail(emailId);
+                this.setState({ currentUI: "completed" });
+                this.updatePopup(this.state);
               } else {
-                  console.log("Email ID is null. Skipping activity parsing.");
+                  console.log("Email ID is null.");
               }
           }else {
             console.log("No activity detected.");
@@ -194,7 +219,7 @@ class Extension {
       }
   
       this.isRunning = false;
-      console.log("[End] Detection running status: " + this.isRunning);
+      console.log("[END] Detection running status: " + this.isRunning);
     }
     
     
@@ -243,7 +268,6 @@ class Extension {
         if (data && data.messages && data.messages.length > 0) {
             const messageId = data.messages[0].id;
 
-            // Fetch the details of the latest message
             const messageResponse = await fetch(
                 `https://www.googleapis.com/gmail/v1/users/me/messages/${messageId}`,
                 {
@@ -270,7 +294,7 @@ class Extension {
     async getRedirectLink() {
       return new Promise((resolve) => {
           const listener = (details) => {
-              if (details.type === "main_frame") { // The request is for the main frame of a tab.
+              if (details.type === "main_frame") { 
                   chrome.webRequest.onBeforeRequest.removeListener(listener);
                   resolve("redirect");
               }
@@ -281,11 +305,9 @@ class Extension {
               { urls: ["<all_urls>"] }
           );
       });
-  }
+    }
   
-  
-  
-    
+
     async getEmailId() {
       const url = 'https://www.googleapis.com/gmail/v1/users/me/messages';
       const responseData = await this.fetchGmailData(url);
@@ -350,8 +372,8 @@ class Extension {
                       return part.body.data;
                   }
               } else if (part.mimeType.startsWith('multipart/')) {
-                  return this.extractEmailBody(part); // Recursive call to handle nested multipart
-              }
+                  return this.extractEmailBody(part);
+              } 
           }
       }
       return null;
@@ -378,21 +400,14 @@ class Extension {
         return response.json();
     }
 
-    extractEmailId(url) {
-      const threadPattern = /\/thread\/([\w-]+)/;
-      const threadMatch = url.match(threadPattern);
-      if (threadMatch && threadMatch[1]) {
-          return `thread-${threadMatch[1]}`;
-      }
-
-      const messagePattern = /\/msg\/([\w-]+)/;
-      const messageMatch = url.match(messagePattern);
-      if (messageMatch && messageMatch[1]) {
-          return `msg-${messageMatch[1]}`;
-      }
-
-      return null;
-    }
+    // extractEmailId(url) {
+    //     const messagePattern = /\/u\/\d+\/#inbox\/([\w-]+)/;
+    //     const messageMatch = url.match(messagePattern);
+    //     if (messageMatch && messageMatch[1]) {
+    //         return messageMatch[1];
+    //     }
+    //     return null;
+    // }
   
     async updateIdJsonInGCS(mailId) {
         try {
@@ -419,24 +434,30 @@ class Extension {
             const destination = `${folderName}/${filename}`;
             const gcsApiEndpoint = `https://storage.googleapis.com/upload/storage/v1/b/${this.bucketName}/o?uploadType=media&name=${encodeURIComponent(destination)}`;
     
+            const headers = new Headers({
+                'Authorization': `Bearer ${this.accessToken}`,
+                'Content-Type': 'application/octet-stream',
+            });
+
             const response = await fetch(gcsApiEndpoint, {
                 method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${this.accessToken}`,
-                    'Content-Type': 'application/octet-stream',
-                },
-                body: data
+                headers: headers,
+                body: data,
             });
-    
-            if (response.ok) {
-                console.log(`Data saved to GCS: ${filename}`);
-            } else {
-                console.error('Failed to save data to GCS:', await response.text());
+
+            if (!response.ok) {
+                throw new Error(`Failed to save data to GCS. Status: ${response.status}`);
             }
+
+            const responseBody = await response.json();
+            console.log(`Saved data to GCS: ${responseBody.name}`);
+            this.server.sendMessage({ id: folderName});
         } catch (error) {
-            console.error(`Failed to save data to GCS: ${filename}`, error);
+            console.error('Failed to save data to GCS:', error);
         }
       }
+
+
 
    }
 

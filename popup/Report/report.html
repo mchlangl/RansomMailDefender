@@ -11,28 +11,33 @@
     <div class="page-container">
       <div id="main-content">
         <div class="logo-title">
-          <img src="../../Assets/images/logo.png" alt="logo">
+          <img src="../../assets/images/logo.png" alt="logo">
           <h1>RansomMailDefender</h1>
         </div>
         
         <div class="report-container">
           <h1>Report</h1>
     
-          <h2 class="content-title">Title</h2>
+          <h2 class="content-title">{{subject}}</h2>
           <div class="categories">
-              <div class="btn-category">Virus</div>
-              <div class="btn-category">Worm</div>
-              <div class="btn-category">Ransomware</div>
+              <div class="btn-category">{{category}}</div>
           </div>
     
           <div>
-              <p>Header</p>
-              <p>Email Subject</p>
-              <p>Sender</p>
-              <p>Content</p>
-              <p>Attachment</p>
+              <p>Header : </p>
+              <p>Email Subject : {{subject}}</p>
+              <p>Sender : {{sender}}</p> <br>
+
+              <p>Content : </p>
+              <p>Name : {{malware}}</p>
+              <p>Description : {{description}}</p>
+              <p>Detection Type : {{malware_type}}</p>
+              <p>Category : {{category}}</p>
+
+              <p>Attachment : {{attachment}}</p>
           </div>
       </div>
+
       </div>
     </div>
   </body>

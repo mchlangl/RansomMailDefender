@@ -30,6 +30,7 @@ body {
 .left-side-bar {
   position: relative;
   left: 5px;
+  /* display: none; */
 }
 
 .nav-items {
@@ -37,7 +38,7 @@ body {
   list-style: none;
 }
 
-/* #genreport {
+#genreport {
   width: 42px;
   height: 42px;
   background-image: url("../assets/images/gen-report.png");
@@ -50,7 +51,7 @@ body {
   transform: translateY(-50%);
   border: none;
   cursor: pointer;
-} */
+}
 
 .nav-options {
   list-style-type: none;
@@ -280,7 +281,7 @@ margin: 0;
 font-size: 14px;
 margin: 5px;
 }
-
+/* 
 #default-content {
   display: block;
 }
@@ -294,4 +295,4 @@ margin: 5px;
 
 .prog-content, .comp-content, .mal-content, .clean-content {
   display: none;
-}
+} */
